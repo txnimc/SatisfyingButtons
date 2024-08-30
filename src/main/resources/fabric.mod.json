@@ -12,7 +12,7 @@
 		"issues": "https://github.com/${github}/${name}/issues"
 	},
 	"license": "${license}",
-	"icon": "assets/${namespace}/textures/mod_logo.png",
+	"icon": "assets/${id}/textures/mod_logo.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [

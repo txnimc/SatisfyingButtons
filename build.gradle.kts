@@ -7,7 +7,7 @@ val settings = object : TxniTemplateSettings {
 		}
 
 		override fun addFabric(deps: DependencyHandlerScope) {
-
+			deps.modImplementation(modrinth("modmenu", "11.0.2"))
 		}
 
 		override fun addForge(deps: DependencyHandlerScope) {
@@ -125,8 +125,6 @@ dependencies {
 	settings.depsHandler.addGlobal(this)
 
 	if (isFabric) {
-		modRuntimeOnly("maven.modrinth:sodium:mc1.21-0.6.0-beta.1-fabric")
-
 		settings.depsHandler.addFabric(this)
 		modImplementation("net.fabricmc.fabric-api:fabric-api:${property("deps.fapi")}")
 		modImplementation("net.fabricmc:fabric-loader:${property("deps.fabric_loader")}")
@@ -144,8 +142,6 @@ dependencies {
 	}
 
 	if (isNeo) {
-		modRuntimeOnly("maven.modrinth:sodium:mc1.21-0.6.0-beta.1-neoforge")
-
 		settings.depsHandler.addNeo(this)
 		"neoForge"("net.neoforged:neoforge:${property("deps.fml")}")
 	}
