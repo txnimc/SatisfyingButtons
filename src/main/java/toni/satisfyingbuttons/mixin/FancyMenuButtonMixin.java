@@ -1,10 +1,11 @@
 package toni.satisfyingbuttons.mixin;
- 
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+
+import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractButton;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.resources.ResourceLocation;
 import org.spongepowered.asm.mixin.Mixin;
@@ -12,22 +13,21 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import net.minecraft.client.gui.GuiGraphics;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import toni.satisfyingbuttons.accessors.IAbstractButtonAccessor;
 import toni.satisfyingbuttons.SatisfyingButtons;
+import toni.satisfyingbuttons.accessors.IAbstractButtonAccessor;
 import toni.satisfyingbuttons.foundation.config.AllConfigs;
 
 #if AFTER_21_1
 import net.minecraft.client.gui.components.WidgetSprites;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 #else
 import net.minecraft.client.gui.components.AbstractWidget;
 #endif
 
-
-@Mixin(AbstractButton.class)
-public class AbstractButtonMixin implements IAbstractButtonAccessor
+@Mixin(value = ExtendedButton.class, remap = true)
+public class FancyMenuButtonMixin implements IAbstractButtonAccessor
 {
     @Unique
     private boolean satisfying_buttons$wasHovered;
@@ -37,12 +37,13 @@ public class AbstractButtonMixin implements IAbstractButtonAccessor
 
     @Override
     public long satisfyingButtons$getHoverTime() { return satisfying_buttons$hoverOrFocusedStartTime; }
- 
-    @Inject(at = @At("RETURN"), method = "renderWidget")
+
+    @Inject(at = @At("RETURN"), method = "renderWidget", remap = true)
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci)
-    {   
-        var ths = (AbstractButton) (Object) this;
-        var isHovered = ths.isHovered(); 
+    {
+        var ths = (ExtendedButton) (Object) this;
+
+        var isHovered = ths.isHovered();
         if (!ths.active)
             return;
 
@@ -70,14 +71,23 @@ public class AbstractButtonMixin implements IAbstractButtonAccessor
             satisfying_buttons$hoverOrFocusedStartTime = 0;
         }
 
+        var custom = ths.getExtendedAsCustomizableWidget();
+        if (custom.getCustomBackgroundNormalFancyMenu() != null || custom.isNineSliceCustomBackgroundTexture_FancyMenu() || ths.getBackgroundColorNormal() != null)
+        {
+            satisfying_buttons$wasHovered = isHovered;
+            return;
+        }
+
         if (AllConfigs.client().AnimationEnabled.get())
+        {
             SatisfyingButtons.renderButtonOverlay(graphics, ths);
+        }
 
         satisfying_buttons$wasHovered = isHovered;
     }
 
     #if AFTER_21_1
-    @WrapOperation(at = @At(target = "Lnet/minecraft/client/gui/components/WidgetSprites;get(ZZ)Lnet/minecraft/resources/ResourceLocation;", value = "INVOKE"), method = "renderWidget")
+    @WrapOperation(at = @At(target = "Lnet/minecraft/client/gui/components/WidgetSprites;get(ZZ)Lnet/minecraft/resources/ResourceLocation;", value = "INVOKE"), method = "renderBackground")
     public ResourceLocation render(WidgetSprites instance, boolean enabled, boolean focused, Operation<ResourceLocation> original)
     {
         if (AllConfigs.client().FadeInVanillaWidgetTexture.get())
@@ -87,30 +97,26 @@ public class AbstractButtonMixin implements IAbstractButtonAccessor
 
         return original.call(instance, enabled, focused);
     }
-
     #else
-    @Inject(at = @At("HEAD"), method = "getTextureY", cancellable = true)
+
+    #if FORGE
+    @Inject(at = @At("HEAD"), method = "m_274533_", cancellable = true, remap = false)
+    #else
+    @Inject(at = @At("HEAD"), method = "getTextureY", cancellable = true, remap = false)
+    #endif
     public void getTextureY(CallbackInfoReturnable<Integer> cir)
     {
+        var ths = (ExtendedButton) (Object) this;
+        var custom = ths.getExtendedAsCustomizableWidget();
+        if (custom.getCustomBackgroundNormalFancyMenu() != null || custom.isNineSliceCustomBackgroundTexture_FancyMenu() || ths.getBackgroundColorNormal() != null)
+            return;
+
         // disable switching hovered vanilla texture immediately --- handle in renderOverlay
         if (AllConfigs.client().FadeInVanillaWidgetTexture.get())
         {
-            var ths = (AbstractWidget) (Object) this;
             int i = ths.active ? 1 : 0;
             cir.setReturnValue(46 + i * 20);
         }
     }
     #endif
-
-//    @Inject(at = @At("HEAD"), method = "getTextureY", cancellable = true)
-//    public void getTextureY(CallbackInfoReturnable<Integer> cir)
-//    {
-//        // disable switching hovered vanilla texture immediately --- handle in renderOverlay
-//        if (AllConfigs.client().FadeInVanillaWidgetTexture)
-//        {
-//            var ths = (AbstractWidget) (Object) this;
-//            int i = ths.active ? 1 : 0;
-//            cir.setReturnValue(#if PRE_CURRENT_MC_1_19_2 i #elif POST_CURRENT_MC_1_20_1 46 + i * 20 #endif);
-//        }
-//    }
 }

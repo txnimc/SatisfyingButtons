@@ -14,6 +14,7 @@ import java.util.function.Supplier;
     #else
     import net.minecraftforge.fml.config.ModConfig;
     import net.minecraftforge.common.ForgeConfigSpec;
+    import net.minecraftforge.common.ForgeConfigSpec.*;
     #endif
 #endif
 

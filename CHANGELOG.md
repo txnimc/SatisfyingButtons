@@ -1,2 +1,1 @@
-## Changelog
-- Initial release
+Fix crash on 1.20 Forge

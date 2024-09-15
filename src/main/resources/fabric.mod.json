@@ -30,5 +30,5 @@
 		"minecraft": "${mc}",
 		"fabric-api": "*"
 	},
-	"accessWidener": "${id}.accesswidener"
+	"accessWidener": "${id}_${mcVersion}.accesswidener"
 }

@@ -7,6 +7,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
+
 import toni.satisfyingbuttons.accessors.IAbstractButtonAccessor;
 import toni.satisfyingbuttons.foundation.config.AllConfigs;
 import org.apache.logging.log4j.LogManager;
@@ -17,14 +18,38 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.util.CommonColors;
+
+#if AFTER_21_1
 import net.neoforged.neoforge.client.gui.ConfigurationScreen;
+#else
+import static net.minecraft.client.gui.components.AbstractWidget.WIDGETS_LOCATION;
+#endif
 
 #if FABRIC
     import net.fabricmc.api.ClientModInitializer;
     import net.fabricmc.api.ModInitializer;
+    #if after_21_1
     import fuzs.forgeconfigapiport.fabric.api.neoforge.v4.NeoForgeConfigRegistry;
     import fuzs.forgeconfigapiport.fabric.api.neoforge.v4.client.ConfigScreenFactoryRegistry;
+    import net.neoforged.neoforge.client.gui.ConfigurationScreen;
+    #endif
+
+    #if current_20_1
+    import fuzs.forgeconfigapiport.api.config.v2.ForgeConfigRegistry;
+    #endif
 #endif
+
+#if FORGE
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.registries.*;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.fml.ModLoadingContext;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+#endif
+
 
 #if NEO
 import net.neoforged.fml.common.Mod;
@@ -46,35 +71,54 @@ public class SatisfyingButtons #if FABRIC implements ModInitializer, ClientModIn
     public static final String MODID = "satisfying_buttons";
     public static final Logger LOGGER = LogManager.getLogger(MODNAME);
 
-    #if NEO private static boolean unfrozen = unfreeze(); #endif
-	public static final SoundEvent BUTTON_HOVER = Registry.register(BuiltInRegistries.SOUND_EVENT, "button_hover", SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(MODID, "button_hover")));
-	public static final SoundEvent BUTTON_HOVER_REVERSE = Registry.register(BuiltInRegistries.SOUND_EVENT, "button_hover_reverse", SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(MODID, "button_hover_reverse")));
-    #if NEO private static boolean frozen = refreeze(); #endif
+    #if FORGE
+        private static final DeferredRegister<SoundEvent> SOUNDS = DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, MODID);
+
+        public static final RegistryObject<SoundEvent> BUTTON_HOVER = SOUNDS.register("button_hover", () -> SoundEvent.createVariableRangeEvent(#if AFTER_21_1 ResourceLocation.fromNamespaceAndPath #else new ResourceLocation #endif(MODID, "button_hover")));
+        public static final RegistryObject<SoundEvent> BUTTON_HOVER_REVERSE = SOUNDS.register("button_hover_reverse", () -> SoundEvent.createVariableRangeEvent(#if AFTER_21_1 ResourceLocation.fromNamespaceAndPath #else new ResourceLocation #endif(MODID, "button_hover_reverse")));
+    #else
+        #if NEO private static boolean unfrozen = unfreeze(); #endif
+        public static final SoundEvent BUTTON_HOVER = Registry.register(BuiltInRegistries.SOUND_EVENT, "button_hover", SoundEvent.createVariableRangeEvent(#if AFTER_21_1 ResourceLocation.fromNamespaceAndPath #else new ResourceLocation #endif(MODID, "button_hover")));
+        public static final SoundEvent BUTTON_HOVER_REVERSE = Registry.register(BuiltInRegistries.SOUND_EVENT, "button_hover_reverse", SoundEvent.createVariableRangeEvent(#if AFTER_21_1 ResourceLocation.fromNamespaceAndPath #else new ResourceLocation #endif(MODID, "button_hover_reverse")));
+        #if NEO private static boolean frozen = refreeze(); #endif
+    #endif
 
     public SatisfyingButtons(#if NEO IEventBus modEventBus, ModContainer modContainer #endif) {
         #if FORGE
         var context = FMLJavaModLoadingContext.get();
         var modEventBus = context.getModEventBus();
+
+        SOUNDS.register(FMLJavaModLoadingContext.get().getModEventBus());
         #endif
 
         #if FORGELIKE
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(this::clientSetup);
 
-        AllConfigs.register(modContainer::registerConfig);
-        modContainer.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
+        AllConfigs.register((type, spec) -> {
+            #if FORGE
+            ModLoadingContext.get().registerConfig(type, spec);
+            #elif NEO
+            modContainer.registerConfig(type, spec);
+            modContainer.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
+            #endif
+        });
         #endif
     }
 
-
     #if FABRIC @Override #endif
     public void onInitialize() {
-
         #if FABRIC
         AllConfigs.register((type, spec) -> {
-           NeoForgeConfigRegistry.INSTANCE.register(SatisfyingButtons.MODID, type, spec);
+            #if AFTER_21_1
+            NeoForgeConfigRegistry.INSTANCE.register(SatisfyingButtons.MODID, type, spec);
+            #else
+            ForgeConfigRegistry.INSTANCE.register(SatisfyingButtons.MODID, type, spec);
+            #endif
         });
-        ConfigScreenFactoryRegistry.INSTANCE.register(SatisfyingButtons.MODID, ConfigurationScreen::new);
+            #if AFTER_21_1
+            ConfigScreenFactoryRegistry.INSTANCE.register(SatisfyingButtons.MODID, ConfigurationScreen::new);
+            #endif
         #endif
 
     }
@@ -114,7 +158,11 @@ public class SatisfyingButtons #if FABRIC implements ModInitializer, ClientModIn
             RenderSystem.enableBlend();
             RenderSystem.enableDepthTest();
 
+            #if AFTER_21_1
             graphics.blitSprite(AbstractButton.SPRITES.get(ths.active, ths.isHoveredOrFocused()), ths.getX(), ths.getY(), ths.getWidth(), ths.getHeight());
+            #else
+            graphics.blitNineSliced(WIDGETS_LOCATION, ths.getX(), ths.getY(), ths.getWidth(), ths.getHeight(), 20, 4, 200, 20, 0, 46 + 2 * 20);
+            #endif
 
             setColor(graphics, 1.0F, 1.0F, 1.0F, 1.0F);
         }
@@ -129,18 +177,12 @@ public class SatisfyingButtons #if FABRIC implements ModInitializer, ClientModIn
                     FastColor.ARGB32.green(color),
                     FastColor.ARGB32.blue(color));
 
-
             graphics.fill(ths.getX(), ths.getY(), ths.getX() + ths.getWidth(), ths.getY() +ths.getHeight(), lerped);
         }
     }
 
 
-
     private static void setColor(GuiGraphics graphics, float v, float v1, float v2, float alpha) { graphics.setColor(v, v1, v2, alpha); }
-
-
-
-
 
 
     // Forg event stubs to call the Fabric initialize methods, and set up cloth config screen

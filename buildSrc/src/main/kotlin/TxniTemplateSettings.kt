@@ -9,6 +9,12 @@ interface TxniTemplateSettings {
 interface DependencyHandler {
     fun modrinth(name: String, dep: Any?) = "maven.modrinth:$name:$dep"
 
+    fun modrinth(name: String) : String {
+        val regex = """(?:https:\/\/modrinth\.com\/mod\/)?(.*?)\/version\/(.*)""".toRegex()
+        val maven = regex.replace(name, "maven.modrinth:\$1:\$2")
+        return maven
+    }
+
     fun addGlobal(deps: DependencyHandlerScope)
     fun addFabric(deps: DependencyHandlerScope)
     fun addForge(deps: DependencyHandlerScope)

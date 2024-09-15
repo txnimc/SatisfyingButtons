@@ -3,12 +3,14 @@
   "package": "toni.satisfyingbuttons.mixin",
   "compatibilityLevel": "JAVA_17",
   "minVersion": "0.8",
+  "plugin": "toni.satisfyingbuttons.mixin.MixinPlugin",
   "mixins": [
   ],
   "injectors": {
     "defaultRequire": 1
   },
   "client": [
-    "AbstractButtonMixin"
+    "AbstractButtonMixin",
+    "FancyMenuButtonMixin"
   ]
 }

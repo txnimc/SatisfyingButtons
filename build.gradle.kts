@@ -7,15 +7,32 @@ val settings = object : TxniTemplateSettings {
 		}
 
 		override fun addFabric(deps: DependencyHandlerScope) {
-			deps.modImplementation(modrinth("modmenu", "11.0.2"))
+			if (mcVersion == "1.21.1") {
+				deps.modImplementation(modrinth("modmenu", "11.0.2"))
+				deps.modCompileOnly(modrinth("fancymenu/version/3.2.5-1.21-fabric"))
+				deps.modCompileOnly(modrinth("melody/version/1.0.10-1.21-fabric"))
+				deps.modCompileOnly(modrinth("konkrete/version/1.9.9-1.21-neoforge"))
+			}
+			else {
+				deps.modImplementation(modrinth("fancymenu/version/3.2.3-1.20.1-fabric"))
+				deps.modImplementation(modrinth("melody/version/1.0.4-1.20.1-1.20.4-fabric"))
+				deps.modImplementation(modrinth("konkrete/version/1.8.1-1.20.1-fabric"))
+			}
 		}
 
 		override fun addForge(deps: DependencyHandlerScope) {
+			deps.compileOnly(deps.annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.5")!!)
+			deps.include(deps.implementation("io.github.llamalad7:mixinextras-forge:0.3.5")!!)
 
+			deps.modCompileOnly(modrinth("fancymenu/version/3.2.3-1.20.1-forge"))
+			deps.modCompileOnly(modrinth("melody/version/1.0.3-1.20.1-1.20.4-forge"))
+			deps.modCompileOnly(modrinth("konkrete/version/1.8.0-1.20-1.20.1-forge"))
 		}
 
 		override fun addNeo(deps: DependencyHandlerScope) {
-
+			deps.modCompileOnly(modrinth("fancymenu/version/3.2.5-1.21-neoforge"))
+			deps.modCompileOnly(modrinth("melody/version/1.0.10-1.21-neoforge"))
+			deps.modCompileOnly(modrinth("konkrete/version/1.9.9-1.21-neoforge"))
 		}
 	}
 
@@ -55,7 +72,7 @@ plugins {
 }
 
 // The manifold Gradle plugin version. Update this if you update your IntelliJ Plugin!
-manifold { manifoldVersion = "2024.1.30" }
+manifold { manifoldVersion = "2024.1.31" }
 
 // Variables
 class ModData {
@@ -152,7 +169,7 @@ dependencies {
 // Loom config
 loom {
 	try {
-		accessWidenerPath.set(rootProject.file("src/main/resources/${mod.id}.accesswidener"))
+		accessWidenerPath.set(rootProject.file("src/main/resources/${mod.id}_${mcVersion}.accesswidener"))
 	}
 	catch (_: Exception) {
 		println("Could not set accesswidener!")
@@ -183,7 +200,7 @@ loom {
 tasks {
 	remapJar {
 		if (isNeo) {
-			atAccessWideners.add("${mod.id}.accesswidener")
+			atAccessWideners.add("${mod.id}_${mcVersion}.accesswidener")
 		}
 	}
 }
@@ -230,6 +247,7 @@ tasks.processResources {
 	val map = mapOf(
 		"version" to mod.version,
 		"mc" to mod.mcDep,
+		"mcVersion" to mcVersion,
 		"id" to mod.id,
 		"group" to mod.group,
 		"author" to mod.author,
