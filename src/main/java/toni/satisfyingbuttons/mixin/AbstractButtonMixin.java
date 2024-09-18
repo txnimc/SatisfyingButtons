@@ -15,6 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import net.minecraft.client.gui.GuiGraphics;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import toni.satisfyingbuttons.SatisfyingButtonsClient;
 import toni.satisfyingbuttons.accessors.IAbstractButtonAccessor;
 import toni.satisfyingbuttons.SatisfyingButtons;
 import toni.satisfyingbuttons.foundation.config.AllConfigs;
@@ -52,7 +53,7 @@ public class AbstractButtonMixin implements IAbstractButtonAccessor
             {
                 // play hover sound
                 var handler = Minecraft.getInstance().getSoundManager();
-                handler.play(SimpleSoundInstance.forUI(SatisfyingButtons.BUTTON_HOVER #if FORGE .get() #endif, AllConfigs.client().ButtonSoundPitch.getF(), AllConfigs.client().ButtonSoundVolume.getF()));
+                handler.play(SimpleSoundInstance.forUI(SatisfyingButtonsClient.BUTTON_HOVER #if FORGE .get() #endif, AllConfigs.client().ButtonSoundPitch.getF(), AllConfigs.client().ButtonSoundVolume.getF()));
             }
 
             satisfying_buttons$hoverOrFocusedStartTime = Util.getMillis();
@@ -64,7 +65,7 @@ public class AbstractButtonMixin implements IAbstractButtonAccessor
             {
                 // play unhover sound
                 var handler = Minecraft.getInstance().getSoundManager();
-                handler.play(SimpleSoundInstance.forUI(SatisfyingButtons.BUTTON_HOVER_REVERSE #if FORGE .get() #endif, AllConfigs.client().ButtonSoundPitch.getF(), AllConfigs.client().ButtonSoundVolume.getF()));
+                handler.play(SimpleSoundInstance.forUI(SatisfyingButtonsClient.BUTTON_HOVER_REVERSE #if FORGE .get() #endif, AllConfigs.client().ButtonSoundPitch.getF(), AllConfigs.client().ButtonSoundVolume.getF()));
             }
 
             satisfying_buttons$hoverOrFocusedStartTime = 0;

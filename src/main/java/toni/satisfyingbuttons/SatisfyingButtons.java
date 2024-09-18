@@ -71,24 +71,12 @@ public class SatisfyingButtons #if FABRIC implements ModInitializer, ClientModIn
     public static final String MODID = "satisfying_buttons";
     public static final Logger LOGGER = LogManager.getLogger(MODNAME);
 
-    #if FORGE
-        private static final DeferredRegister<SoundEvent> SOUNDS = DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, MODID);
-
-        public static final RegistryObject<SoundEvent> BUTTON_HOVER = SOUNDS.register("button_hover", () -> SoundEvent.createVariableRangeEvent(#if AFTER_21_1 ResourceLocation.fromNamespaceAndPath #else new ResourceLocation #endif(MODID, "button_hover")));
-        public static final RegistryObject<SoundEvent> BUTTON_HOVER_REVERSE = SOUNDS.register("button_hover_reverse", () -> SoundEvent.createVariableRangeEvent(#if AFTER_21_1 ResourceLocation.fromNamespaceAndPath #else new ResourceLocation #endif(MODID, "button_hover_reverse")));
-    #else
-        #if NEO private static boolean unfrozen = unfreeze(); #endif
-        public static final SoundEvent BUTTON_HOVER = Registry.register(BuiltInRegistries.SOUND_EVENT, "button_hover", SoundEvent.createVariableRangeEvent(#if AFTER_21_1 ResourceLocation.fromNamespaceAndPath #else new ResourceLocation #endif(MODID, "button_hover")));
-        public static final SoundEvent BUTTON_HOVER_REVERSE = Registry.register(BuiltInRegistries.SOUND_EVENT, "button_hover_reverse", SoundEvent.createVariableRangeEvent(#if AFTER_21_1 ResourceLocation.fromNamespaceAndPath #else new ResourceLocation #endif(MODID, "button_hover_reverse")));
-        #if NEO private static boolean frozen = refreeze(); #endif
-    #endif
-
     public SatisfyingButtons(#if NEO IEventBus modEventBus, ModContainer modContainer #endif) {
         #if FORGE
         var context = FMLJavaModLoadingContext.get();
         var modEventBus = context.getModEventBus();
 
-        SOUNDS.register(FMLJavaModLoadingContext.get().getModEventBus());
+        SatisfyingButtonsClient.SOUNDS.register(FMLJavaModLoadingContext.get().getModEventBus());
         #endif
 
         #if FORGELIKE
@@ -125,21 +113,8 @@ public class SatisfyingButtons #if FABRIC implements ModInitializer, ClientModIn
 
     #if FABRIC @Override #endif
     public void onInitializeClient() {
-
+        SatisfyingButtonsClient.init();
     }
-
-
-    #if NEO
-    public static boolean unfreeze() {
-        ((MappedRegistry<SoundEvent>) BuiltInRegistries.SOUND_EVENT).unfreeze();
-        return true;
-    }
-
-    public static boolean refreeze() {
-        BuiltInRegistries.SOUND_EVENT.freeze();
-        return true;
-    }
-    #endif
 
     public static void renderButtonOverlay(GuiGraphics graphics, AbstractButton ths)
     {

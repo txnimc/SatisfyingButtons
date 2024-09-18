@@ -1,1 +1,1 @@
-Fix crash on 1.20 Forge
+Fix issue with servers kicking clients without the mod
