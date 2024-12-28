@@ -5,8 +5,8 @@ import net.minecraft.core.MappedRegistry;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
+import toni.lib.utils.ColorUtils;
 
 import toni.satisfyingbuttons.accessors.IAbstractButtonAccessor;
 import toni.satisfyingbuttons.foundation.config.AllConfigs;
@@ -18,7 +18,9 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.util.CommonColors;
-
+#if AFTER_21_1
+import net.minecraft.client.renderer.RenderType;
+#endif
 #if AFTER_21_1
 import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 #else
@@ -133,7 +135,9 @@ public class SatisfyingButtons #if FABRIC implements ModInitializer, ClientModIn
             RenderSystem.enableBlend();
             RenderSystem.enableDepthTest();
 
-            #if AFTER_21_1
+            #if AFTER_21_4
+            graphics.blitSprite(RenderType::guiTextured, AbstractButton.SPRITES.get(ths.active, ths.isHoveredOrFocused()), ths.getX(), ths.getY(), ths.getWidth(), ths.getHeight(), ColorUtils.white(alpha));
+            #elif AFTER_21_1
             graphics.blitSprite(AbstractButton.SPRITES.get(ths.active, ths.isHoveredOrFocused()), ths.getX(), ths.getY(), ths.getWidth(), ths.getHeight());
             #else
             graphics.blitNineSliced(WIDGETS_LOCATION, ths.getX(), ths.getY(), ths.getWidth(), ths.getHeight(), 20, 4, 200, 20, 0, 46 + 2 * 20);
@@ -146,19 +150,22 @@ public class SatisfyingButtons #if FABRIC implements ModInitializer, ClientModIn
         {
             var overlayAlpha = Mth.clamp(1f / ((float) AllConfigs.client().DarkenButtonOnHoverTime.get() / ticks), 0f, 1f);
             var color = AllConfigs.client().DarkenButtonColor.get();
-            var lerped = FastColor.ARGB32.color(
-                    (int) Mth.lerp(overlayAlpha, 0, FastColor.ARGB32.alpha(color)),
-                    FastColor.ARGB32.red(color),
-                    FastColor.ARGB32.green(color),
-                    FastColor.ARGB32.blue(color));
+            var lerped = ColorUtils.color(
+                    (int) Mth.lerp(overlayAlpha, 0, ColorUtils.alpha(color)),
+                    ColorUtils.red(color),
+                    ColorUtils.green(color),
+                    ColorUtils.blue(color));
 
             graphics.fill(ths.getX(), ths.getY(), ths.getX() + ths.getWidth(), ths.getY() +ths.getHeight(), lerped);
         }
     }
 
 
-    private static void setColor(GuiGraphics graphics, float v, float v1, float v2, float alpha) { graphics.setColor(v, v1, v2, alpha); }
-
+    private static void setColor(GuiGraphics graphics, float v, float v1, float v2, float alpha) {
+        #if mc < 214
+        graphics.setColor(v, v1, v2, alpha);
+        #endif
+    }
 
     // Forg event stubs to call the Fabric initialize methods, and set up cloth config screen
     #if FORGELIKE
