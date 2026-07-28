@@ -88,7 +88,9 @@ public class FancyMenuButtonMixin implements IAbstractButtonAccessor
     }
 
     #if AFTER_21_1
-    @WrapOperation(at = @At(target = "Lnet/minecraft/client/gui/components/WidgetSprites;get(ZZ)Lnet/minecraft/resources/ResourceLocation;", value = "INVOKE"), method = "renderBackground")
+    // FancyMenu's own method. Remapping would pin the descriptor it had at compile time.
+    @WrapOperation(method = "renderBackground", remap = false,
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/WidgetSprites;get(ZZ)Lnet/minecraft/resources/ResourceLocation;", remap = true))
     public ResourceLocation render(WidgetSprites instance, boolean enabled, boolean focused, Operation<ResourceLocation> original)
     {
         if (AllConfigs.client().FadeInVanillaWidgetTexture.get())
